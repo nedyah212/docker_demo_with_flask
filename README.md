@@ -19,24 +19,44 @@ back up and check out the table!! Very cool!
 
 ## Debian-based Linux Distros
 
-**I am not going to cover the docker install**
+**I am not going to cover the docker install:**
+
+Follow the instructions for your specific distro or environment
 
 **Build image -run from project directory, where Dockerfile is:**
 
 docker build -t flask-docker-demo .
 
-**Run docker image w/ persistent db mapping, and exposing of port:**
+**Build image from specific Dockerfile:**
 
-docker run -d -p 5000:5000 -v $(pwd)/instance:/app/instance --name flask-demo flask-docker-demo
+docker build -t img -f other.Dockerfile .
 
-**Run docker image with /persistant db mapping, and exposing of port, a control group:**
+**Run docker file in detached mode:**
 
-docker run -d -p 5000:5000 -v $(pwd)/instance:/app/instance
---name flask-demo-limited --cpus="0.5" --memory="256m" flask-docker-demo
+docker rund -d flask-docker-demo
+
+**Slightly enhanced command:**
+
+docker run -d --name flask-1 -p 5000:5000 flask-docker-demo
+
+**Full Command:**
+
+docker run -d --name flask-1 -p 5000:5000 -v $(pwd)/instance:/app/instance -v $(pwd)/logs:/logs flask-docker-demo
+
+**Extra parameters for added functionality:**
+
+-p 5000:5000   *expose the correct port, the former reroutes port 5000, 5001:5000 == 127.0.0.1:5001*
+-v $(pwd)/instance:/app/instance  *persist the db*
+-v $(pwd)/logs:/app/logs  *persist the logs*
+--name flask-demo   *rename, goes right before the img name, at end*
+
+*This is just an example, I wont touch these today*
+--cpus="0.5"  *limit cpu to 1/2*
+--memory="256m"   *limit memory to 256mb*
 
 **Example of running a second identical container (to first)- note the port, naming convention:**
 
-docker run -d -p 5001:5000 -v $(pwd)/instance:/app/instance --name flask-demo-2 flask-docker-demo
+docker run -d --name flask-demo-2 flask-docker-demo
 
 **Verify the image is running:**
 
@@ -48,17 +68,41 @@ docker ps -a
 
 **Stop a container:**
 
-docker stop container id
+docker stop container id/name
 
 **Remove a stopped container:**
 
-docker rm container id
+docker rm container id/name
 
 **Remover all stopped containers:**
 
 docker container prune
 
+**Remover everything**
+
+docker system prune -a
+
 **Other useful commands:**
+
+**Docker Login**
+
+docker login -u username
+
+**Prepare img for upload**
+
+docker tag img username/desired_img_name/ver *like 0.0.1*
+
+**Push to docker hub**
+
+docker push username/desired_img_name/ver *matches ver above*
+
+**Access a bash console from the image**
+
+docker exec --interactive --tty d90d
+
+**Loop to remove all docker images, modular**
+
+docker ps -aq | xargs docker rmi server_name *run other commands replacing post xargs*
 
 **Print out required modules:**
 
@@ -78,15 +122,7 @@ deactivate - (when not using)
 
 **Note:**
 
-**A venv with all the requirements need**
-
-**to be present in the project directory**
-
-**with the output from all freeze commands**
-
-**in requirements.txt and installed in the**
-
-**venv using the pip install <package> command.**
+**A venv with all the requirements need to be present in the project directory with the output from all freeze commands in requirements.txt and installed in the venv using the pip install <package> command.**
 
 
 
