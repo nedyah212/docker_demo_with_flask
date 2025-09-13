@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Register</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <header>
+        <h1>Register</h1>
+    </header>
+
+    <main>
+        <!-- Flex container -->
+        <div class="content-flex">
+
+            <!-- Registration Form -->
+            <section aria-labelledby="registration-form" class="form-section">
+                <h2 id="registration-form">Create an Account</h2>
+                <form method="POST" class="registration-form">
+                    {{ form.hidden_tag() }}
+                    <div class="form-group">
+                        {{ form.username.label }}
+                        {{ form.username }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.email.label }}
+                        {{ form.email }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.password.label }}
+                        {{ form.password(class="form-control", autocomplete="new-password") }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.confirm_password.label }}
+                        {{ form.confirm_password }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.submit }}
+                    </div>
+                </form>
+            </section>
+
+            <!-- User Table -->
+            <section aria-labelledby="user-list" class="table-section">
+                <h2 id="user-list">Registered Users</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">Username</th>
+                            <th scope="col">Email</th>
+                            <th scope="col">Actions</th> 
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                            <tr>
+                                <td>{{ user.username }}</td>
+                                <td>{{ user.email }}</td>
+                                <td>
+                                    <form method="POST" action="{{ url_for('main.delete_user', user_id=user.id) }}" style="display:inline;">
+                                        <button class="delete-btn" type="submit">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </section>
+
+        </div>
+    </main>
+
+</body>
+</html>
