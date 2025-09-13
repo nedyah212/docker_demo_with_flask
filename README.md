@@ -75,3 +75,18 @@ You can test this by running pip freeze before activating the environment, then 
 python3 -m venv venv
 source venv/bin/activate
 deactivate - (when not using)
+
+**Note:**
+
+**A venv with all the requirements need**
+
+**to be present in the project directory**
+
+**with the output from all freeze commands**
+
+**in requirements.txt and installed in the**
+
+**venv using the pip install <package> command.**
+
+
+
