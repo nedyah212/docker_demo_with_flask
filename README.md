@@ -45,10 +45,10 @@ docker run -d --name flask-1 -p 5000:5000 -v $(pwd)/instance:/app/instance -v $(
 
 **Extra parameters for added functionality:**
 
--p 5000:5000   *expose the correct port, the former reroutes port 5000, 5001:5000 == 127.0.0.1:5001*
--v $(pwd)/instance:/app/instance  *persist the db*
--v $(pwd)/logs:/app/logs  *persist the logs*
---name flask-demo   *rename, goes right before the img name, at end*
+
+-v $(pwd)/instance:/app/instance
+-v $(pwd)/logs:/app/logs
+--name flask-demo
 
 *This is just an example, I wont touch these today*
 --cpus="0.5"  *limit cpu to 1/2*
@@ -106,7 +106,7 @@ docker ps -aq | xargs docker rmi server_name *run other commands replacing post 
 
 **Print out required modules:**
 
-pip freeze
+pip freeze < requirements.txt
 
 **Python virtual environment info:**
 
@@ -117,12 +117,8 @@ You can test this by running pip freeze before activating the environment, then 
 **Create a virtual environment:**
 
 python3 -m venv venv
+
 source venv/bin/activate
+
 deactivate - (when not using)
-
-**Note:**
-
-**A venv with all the requirements need to be present in the project directory with the output from all freeze commands in requirements.txt and installed in the venv using the pip install <package> command.**
-
-
 

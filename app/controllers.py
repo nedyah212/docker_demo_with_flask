@@ -9,7 +9,6 @@ class Controller():
         form = RegistrationForm()
         posted = False
 
-        users = DatabaseServices.get_all_users()
         if form.validate_on_submit():
             hashed_pw = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
             user = User(username=form.username.data, email=form.email.data, password=hashed_pw)
