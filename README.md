@@ -1,124 +1,280 @@
-# Check out my Persistent DB Docker Flask Application
+# Persistent DB Docker Flask Application
 
-**Information:**
+## Overview
 
-Don't look to much into the functionality of the application.
-It's simple Flask Server making use of Python, SQLite, and SQLAlchemy.
-Its single page validates and registers users and posts the information
-To the other side of page. However, slightly modified these pages could
-be useful in a login and registration system.
+This is a simple Flask server application demonstrating Docker containerization with persistent database storage. The application uses Python, SQLite, and SQLAlchemy to create a single-page user registration and validation system.
 
-The main purpose of this simple application is to display how to write,
-build and setup docker containers. This displays the db is persistant across
-multiple containers, even when they are closed or disposed of.
+**Key Learning Objective:** Understanding how to maintain database persistence across multiple Docker containers, even when containers are stopped or deleted.
 
-A good activity would be to build a container, make a change to the Users table,
-open up a second container and verify the changes persist across images. Then you
-can stop or delete both containers. From there create a new one or start and old
-back up and check out the table!! Very cool!
+### Recommended Activity
+1. Build and run a container
+2. Add users to the database
+3. Create a second container and verify data persistence
+4. Stop/delete both containers
+5. Start a new container and confirm data still exists
 
-## Debian-based Linux Distros
+---
 
-**I am not going to cover the docker install:**
+## Prerequisites
 
-Follow the instructions for your specific distro or environment
+- Docker installed on your system
+- Basic understanding of command line operations
+- Python 3.x (for local development)
 
-**Build image -run from project directory, where Dockerfile is:**
+---
 
+## Docker Commands Reference
+
+### Building Images
+
+**Build image from current directory:**
+```bash
 docker build -t flask-docker-demo .
+```
 
-**Build image from specific Dockerfile:**
-
+**Build from specific Dockerfile:**
+```bash
 docker build -t img -f other.Dockerfile .
+```
 
-**Run docker file in detached mode:**
+### Running Containers
 
-docker rund -d flask-docker-demo
+**Basic detached run:**
+```bash
+docker run -d flask-docker-demo
+```
 
-**Slightly enhanced command:**
-
+**Enhanced run with naming and port mapping:**
+```bash
 docker run -d --name flask-1 -p 5000:5000 flask-docker-demo
+```
 
-**Full Command:**
+**Full command with volume mounting (recommended):**
+```bash
+docker run -d --name flask-1 -p 5000:5000 -v $(pwd)/instance:/app/instance -v $(pwd)/logs:/app/logs flask-docker-demo
+```
 
-docker run -d --name flask-1 -p 5000:5000 -v $(pwd)/instance:/app/instance -v $(pwd)/logs:/logs flask-docker-demo
+**Running a second container for persistence testing:**
+```bash
+docker run -d --name flask-2 -p 5001:5000 -v $(pwd)/instance:/app/instance flask-docker-demo
+```
 
-**Extra parameters for added functionality:**
+### Container Management
 
-
--v $(pwd)/instance:/app/instance
--v $(pwd)/logs:/app/logs
---name flask-demo
-
-*This is just an example, I wont touch these today*
---cpus="0.5"  *limit cpu to 1/2*
---memory="256m"   *limit memory to 256mb*
-
-**Example of running a second identical container (to first)- note the port, naming convention:**
-
-docker run -d --name flask-demo-2 flask-docker-demo
-
-**Verify the image is running:**
-
+**List running containers:**
+```bash
 docker ps
+```
 
-**If it is not on the list, run this:**
-
+**List all containers (including stopped):**
+```bash
 docker ps -a
+```
 
 **Stop a container:**
-
-docker stop container id/name
+```bash
+docker stop
+```
 
 **Remove a stopped container:**
+```bash
+docker rm
+```
 
-docker rm container id/name
-
-**Remover all stopped containers:**
-
+**Remove all stopped containers:**
+```bash
 docker container prune
+```
 
-**Remover everything**
-
+**Remove everything (use with caution):**
+```bash
 docker system prune -a
+```
 
-**Other useful commands:**
+---
 
-**Docker Login**
+## Advanced Docker Features
 
-docker login -u username
+### Volume Mounting Options
 
-**Prepare img for upload**
+**Database persistence:**
+```bash
+-v $(pwd)/instance:/app/instance
+```
 
-docker tag img username/desired_img_name/ver *like 0.0.1*
+**Log file persistence:**
+```bash
+-v $(pwd)/logs:/app/logs
+```
 
-**Push to docker hub**
+**Custom container name:**
+```bash
+--name flask-demo
+```
 
-docker push username/desired_img_name/ver *matches ver above*
+### Resource Limiting
 
-**Access a bash console from the image**
+**Limit CPU usage to 50%:**
+```bash
+--cpus="0.5"
+```
 
-docker exec --interactive --tty d90d
+**Limit memory to 256MB:**
+```bash
+--memory="256m"
+```
 
-**Loop to remove all docker images, modular**
+### Container Access
 
-docker ps -aq | xargs docker rmi server_name *run other commands replacing post xargs*
+**Access bash console in running container:**
+```bash
+docker exec -it  /bin/bash
+```
 
-**Print out required modules:**
+---
 
-pip freeze < requirements.txt
+## Docker Hub Integration
 
-**Python virtual environment info:**
+### Authentication and Publishing
 
-Super useful for isolating dependencies when building a container and managing Python modules in general. Highly recommended! When you create a virtual environment in your project directory and activate it, any pip packages you install will only be available to that specific environment — they won’t affect other projects or the system Python.
+**Login to Docker Hub:**
+```bash
+docker login -u
+```
 
-You can test this by running pip freeze before activating the environment, then activating your venv and running pip freeze again. You should see that the installed packages are isolated. It helps if you already have some pip packages installed before you try this, so you can clearly see the difference.
+**Tag image for upload:**
+```bash
+docker tag  /:
+```
 
-**Create a virtual environment:**
+**Push to Docker Hub:**
+```bash
+docker push /:
+```
 
+---
+
+## Python Environment Management
+
+### Virtual Environment Setup
+
+Creating isolated Python environments is crucial for clean dependency management:
+
+**Create virtual environment:**
+```bash
 python3 -m venv venv
+```
 
+**Activate environment:**
+```bash
 source venv/bin/activate
+```
 
-deactivate - (when not using)
+**Deactivate when finished:**
+```bash
+deactivate
+```
 
+**Generate requirements file:**
+```bash
+pip freeze > requirements.txt
+```
+
+### Benefits of Virtual Environments
+
+- Isolates project dependencies
+- Prevents conflicts between different projects
+- Makes Docker builds more predictable
+- Easier to manage Python packages
+
+**Testing Isolation:**
+Run `pip freeze` before and after activating your virtual environment to see the difference in available packages.
+
+---
+
+## Useful Bulk Operations
+
+**Remove all containers of specific type:**
+```bash
+docker ps -aq | xargs docker rm
+```
+
+**Stop all running containers:**
+```bash
+docker ps -q | xargs docker stop
+```
+
+---
+
+## Database Persistence Verification
+
+### Step-by-Step Testing Process
+
+1. **Start first container:**
+   ```bash
+   docker run -d --name flask-test-1 -p 5000:5000 -v $(pwd)/instance:/app/instance flask-docker-demo
+   ```
+
+2. **Add users via web interface at `localhost:5000`**
+
+3. **Start second container:**
+   ```bash
+   docker run -d --name flask-test-2 -p 5001:5000 -v $(pwd)/instance:/app/instance flask-docker-demo
+   ```
+
+4. **Verify data exists at `localhost:5001`**
+
+5. **Clean up:**
+   ```bash
+   docker stop flask-test-1 flask-test-2
+   docker rm flask-test-1 flask-test-2
+   ```
+
+6. **Start new container and verify persistence:**
+   ```bash
+   docker run -d --name flask-test-3 -p 5000:5000 -v $(pwd)/instance:/app/instance flask-docker-demo
+   ```
+
+---
+
+## Troubleshooting
+
+### Common Issues
+
+- **Port already in use:** Change the host port (e.g., `-p 5001:5000`)
+- **Permission denied:** Ensure Docker daemon is running and user has proper permissions
+- **Database not persisting:** Verify volume mount paths are correct
+- **Container won't start:** Check `docker logs <container_name>` for error messages
+
+### Debugging Commands
+
+**View container logs:**
+```bash
+docker logs
+```
+
+**Inspect container details:**
+```bash
+docker inspect
+```
+
+**Check resource usage:**
+```bash
+docker stats
+```
+
+---
+
+## Next Steps
+
+This application serves as a foundation for more complex Docker deployments. Consider exploring:
+
+- Multi-container applications with Docker Compose
+- Container orchestration with Kubernetes
+- CI/CD pipelines with Docker
+- Production deployment strategies
+- Security best practices for containerized applications
+
+---
+
+*This guide demonstrates fundamental Docker concepts through practical database persistence examples. The simple Flask application provides a hands-on learning environment for understanding container lifecycle management and data persistence strategies.*
