@@ -1,10 +1,12 @@
 pipeline {
     agent any
-
     environment {
         NEXUS_REGISTRY = 'localhost:8082'
+        NEXUS_REGISTRY_IP = '10.0.0.224:8082'
         NEXUS_CREDENTIAL_ID = 'nexus-credentials'
-        IMAGE_NAME = 'flask-demo'
+        IMAGE_NAME = "${scm.getUserRemoteConfigs()[0].getUrl().tokenize('/').last().split('\\.')[0]}"
+        STAGING_SERVER = '10.0.0.225'
+        CONTAINER_PORT = '5000'
     }
 
     stages {
@@ -45,36 +47,37 @@ pipeline {
             }
         }
 
-stage('Deploy to Staging Server') {
-    steps {
-        withCredentials([
-            sshUserPrivateKey(
-                credentialsId: 'staging-ssh-key',
-                keyFileVariable: 'SSH_KEY',
-                usernameVariable: 'SSH_USER'
-            ),
-            usernamePassword(
-                credentialsId: 'nexus-credentials',
-                usernameVariable: 'NEXUS_CREDS_USR',
-                passwordVariable: 'NEXUS_CREDS_PSW'
-            )
-        ]) {
-            script {
-                echo "Deploying to staging server..."
-                sh """
-                    ssh -o StrictHostKeyChecking=no -i \$SSH_KEY \$SSH_USER@10.0.0.225 \
-                        "echo '\$NEXUS_CREDS_PSW' | docker login 10.0.0.224:8082 -u '\$NEXUS_CREDS_USR' --password-stdin && \
-                        docker pull 10.0.0.224:8082/flask-demo:${BUILD_NUMBER} && \
-                        docker stop flask-demo || true && \
-                        docker rm flask-demo || true && \
-                        docker run -d --name flask-demo -p 80:5000 10.0.0.224:8082/flask-demo:${BUILD_NUMBER}"
-                """
-                echo "Container deployed on staging"
+        stage('Deploy to Staging Server') {
+            steps {
+                withCredentials([
+                    sshUserPrivateKey(
+                        credentialsId: 'staging-ssh-key',
+                        keyFileVariable: 'SSH_KEY',
+                        usernameVariable: 'SSH_USER'
+                    ),
+                    usernamePassword(
+                        credentialsId: 'nexus-credentials',
+                        usernameVariable: 'NEXUS_CREDS_USR',
+                        passwordVariable: 'NEXUS_CREDS_PSW'
+                    )
+                ]) {
+                    script {
+                        echo "Deploying to staging server..."
+                        sh """
+                            ssh -o StrictHostKeyChecking=no -i \$SSH_KEY \$SSH_USER@${STAGING_SERVER} \
+                                "echo '\$NEXUS_CREDS_PSW' | docker login ${NEXUS_REGISTRY_IP} -u '\$NEXUS_CREDS_USR' --password-stdin && \
+                                docker pull ${NEXUS_REGISTRY_IP}/${IMAGE_NAME}:${BUILD_NUMBER} && \
+                                docker stop ${IMAGE_NAME} || true && \
+                                docker rm ${IMAGE_NAME} || true && \
+                                docker run -d --name ${IMAGE_NAME} -p 80:${CONTAINER_PORT} ${NEXUS_REGISTRY_IP}/${IMAGE_NAME}:${BUILD_NUMBER}"
+                        """
+                        echo "Container deployed on staging"
+                    }
+                }
             }
         }
     }
-}
-}
+
     post {
         success {
             echo "Pipeline completed successfully!"
