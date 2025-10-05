@@ -51,9 +51,7 @@ pipeline {
                     string(
                         credentialsId: 'staging-server-address',
                         variable: 'STAGING_SERVER'
-                    )
-                ])
-                withCredentials([
+                    ),
                     usernamePassword(
                         credentialsId: 'staging-credentials',
                         usernameVariable: 'USERNAME',
@@ -71,6 +69,7 @@ pipeline {
                 }
             }
         }
+
     }
 
     post {
