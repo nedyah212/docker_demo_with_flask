@@ -49,7 +49,7 @@ pipeline {
             steps {
                 withCredentials([
                     usernamePassword(
-                        credentialsId: 'staging_server_credentials',
+                        credentialsId: 'staging-credentials',
                         usernameVariable: 'USERNAME',
                         passwordVariable: 'PASSWORD'
                     )
