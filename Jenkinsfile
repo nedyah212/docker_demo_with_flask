@@ -2,8 +2,7 @@ pipeline {
     agent any
     
     environment {
-        // Your infrastructure
-        NEXUS_REGISTRY = '10.0.0.224:8081'
+        NEXUS_REGISTRY = 'localhost:8082'
         NEXUS_CREDENTIAL_ID = 'nexus_credentials'
         IMAGE_NAME = 'flask-demo'
         
@@ -62,9 +61,9 @@ pipeline {
             steps {
                 script {
                     echo "Testing Staging deployment..."
-                    sleep 5  // Give container time to start
+                    sleep 5
                     sh "curl -f http://${STAGING_VM}:5000 || exit 1"
-                    echo "Staging deployment successful!"
+                    echo "✓ Staging deployment successful!"
                 }
             }
         }
@@ -91,8 +90,8 @@ pipeline {
                 script {
                     echo "Verifying Production deployment..."
                     sleep 5
-                    sh "curl -f http://${PROD_VM}:80 || exit 1"  // Test via Caddy
-                    echo "Production deployment successful!"
+                    sh "curl -f http://${PROD_VM}:80 || exit 1"
+                    echo "✓ Production deployment successful!"
                 }
             }
         }
@@ -100,10 +99,10 @@ pipeline {
     
     post {
         success {
-            echo "Pipeline completed successfully!"
+            echo "✓ Pipeline completed successfully! Check Nexus to verify image."
         }
         failure {
-            echo "Pipeline failed. Check logs above."
+            echo "Pipeline failed. Check console output above for errors."
         }
     }
 }
