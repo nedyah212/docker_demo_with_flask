@@ -7,7 +7,8 @@ pipeline {
         IMAGE_NAME = "${scm.getUserRemoteConfigs()[0].getUrl().tokenize('/').last().split('\\.')[0]}"
         STAGING_SERVER = '10.0.0.225'
         PROD_SERVER = '10.0.0.226'
-        CONTAINER_PORT = '5000'
+        CONTAINER_PORT_STAGING = '5000'
+        CONTAINER_PORT_PROD = '8080'
     }
 
     stages {
@@ -70,7 +71,7 @@ pipeline {
                                 docker pull ${NEXUS_REGISTRY_IP}/${IMAGE_NAME}:${BUILD_NUMBER} && \
                                 docker stop ${IMAGE_NAME} || true && \
                                 docker rm ${IMAGE_NAME} || true && \
-                                docker run -d --name ${IMAGE_NAME} -p 80:${CONTAINER_PORT} ${NEXUS_REGISTRY_IP}/${IMAGE_NAME}:${BUILD_NUMBER}"
+                                docker run -d --name ${IMAGE_NAME} -p 80:${CONTAINER_PORT_STAGING} ${NEXUS_REGISTRY_IP}/${IMAGE_NAME}:${BUILD_NUMBER}"
                         """
                         echo "Container deployed on staging"
                     }
@@ -100,9 +101,9 @@ pipeline {
                                 docker pull ${NEXUS_REGISTRY_IP}/${IMAGE_NAME}:${BUILD_NUMBER} && \
                                 docker stop ${IMAGE_NAME} || true && \
                                 docker rm ${IMAGE_NAME} || true && \
-                                docker run -d --name ${IMAGE_NAME} -p 80:${CONTAINER_PORT} ${NEXUS_REGISTRY_IP}/${IMAGE_NAME}:${BUILD_NUMBER}"
+                                docker run -d --name ${IMAGE_NAME} -p 80:${CONTAINER_PORT_PROD} ${NEXUS_REGISTRY_IP}/${IMAGE_NAME}:${BUILD_NUMBER}"
                         """
-                        echo "Container deployed on staging"
+                        echo "Container deployed on production"
                     }
                 }
             }
