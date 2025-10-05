@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        NEXUS_REGISTRY = 'localhost:8082'
+        NEXUS_REGISTRY = '10.0.0.224:8082'
         NEXUS_CREDENTIAL_ID = 'nexus_credentials'
         IMAGE_NAME = 'flask-demo'
     }
