@@ -48,6 +48,12 @@ pipeline {
         stage('Push to Staging Server') {
             steps {
                 withCredentials([
+                    secretText(
+                        credentialsId: 'staging-server-address',
+                        variable: 'STAGING_SERVER'
+                    )
+                ])
+                withCredentials([
                     usernamePassword(
                         credentialsId: 'staging-credentials',
                         usernameVariable: 'USERNAME',
@@ -57,9 +63,9 @@ pipeline {
                     script {
                         echo "Logging into staging server..."
                         sh """
-                            docker login -u $USERNAME -p $PASSWORD staging.server.com
-                            docker tag ${NEXUS_REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER} staging.server.com/${IMAGE_NAME}:${BUILD_NUMBER}
-                            docker push staging.server.com/${IMAGE_NAME}:${BUILD_NUMBER}
+                            docker login -u $USERNAME -p $PASSWORD $STAGING_SERVER
+                            docker tag ${NEXUS_REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER} ${STAGING_SERVER}/${IMAGE_NAME}:${BUILD_NUMBER}
+                            docker push ${STAGING_SERVER}/${IMAGE_NAME}:${BUILD_NUMBER}
                         """
                         echo "✓✓✓✓ Image pushed to staging server"
                     }
