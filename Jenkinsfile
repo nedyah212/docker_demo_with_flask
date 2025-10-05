@@ -3,28 +3,23 @@ pipeline {
     
     environment {
         // Your infrastructure
-        NEXUS_URL = "10.0.0.224:8081"
-        IMAGE_NAME = "flask-demo" 
+        NEXUS_REGISTRY = '10.0.0.224:8081'
+        NEXUS_CREDENTIAL_ID = 'nexus_credentials'
+        IMAGE_NAME = 'flask-demo'
         
         // VM details
         STAGING_VM = "10.0.0.225"
         PROD_VM = "10.0.0.226"
         VM_USER = "nedyah"
-        
-        // Docker image tags
-        IMAGE_TAG = "${BUILD_NUMBER}"
-        IMAGE_FULL = "${NEXUS_URL}/${IMAGE_NAME}:${IMAGE_TAG}"
-        IMAGE_LATEST = "${NEXUS_URL}/${IMAGE_NAME}:latest"
     }
     
     stages {
         stage('Build Docker Image') {
             steps {
                 script {
-                    echo "Building Docker image..."
-                    sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
-                    sh "docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_FULL}"
-                    sh "docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_LATEST}"
+                    echo "Building image: ${NEXUS_REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER}"
+                    dockerImage = docker.build("${NEXUS_REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER}")
+                    echo "✓ Image built successfully"
                 }
             }
         }
@@ -32,9 +27,17 @@ pipeline {
         stage('Push to Nexus') {
             steps {
                 script {
-                    echo "Pushing to Nexus..."
-                    sh "docker push ${IMAGE_FULL}"
-                    sh "docker push ${IMAGE_LATEST}"
+                    echo "Logging into registry: ${NEXUS_REGISTRY}"
+                    docker.withRegistry("http://${NEXUS_REGISTRY}", NEXUS_CREDENTIAL_ID) {
+                        echo "Pushing ${BUILD_NUMBER} tag..."
+                        dockerImage.push("${BUILD_NUMBER}")
+                        echo "✓ Pushed build number tag"
+                        
+                        echo "Pushing latest tag..."
+                        dockerImage.push('latest')
+                        echo "✓ Pushed latest tag"
+                    }
+                    echo "✓✓✓ All pushes completed successfully!"
                 }
             }
         }
@@ -45,10 +48,10 @@ pipeline {
                     echo "Deploying to Staging VM (${STAGING_VM})..."
                     sh """
                         ssh ${VM_USER}@${STAGING_VM} '
-                            docker pull ${IMAGE_LATEST} && \
+                            docker pull ${NEXUS_REGISTRY}/${IMAGE_NAME}:latest && \
                             docker stop ${IMAGE_NAME} || true && \
                             docker rm ${IMAGE_NAME} || true && \
-                            docker run -d --name ${IMAGE_NAME} -p 5000:5000 ${IMAGE_LATEST}
+                            docker run -d --name ${IMAGE_NAME} -p 5000:5000 ${NEXUS_REGISTRY}/${IMAGE_NAME}:latest
                         '
                     """
                 }
@@ -73,10 +76,10 @@ pipeline {
                     echo "Deploying to Production VM (${PROD_VM})..."
                     sh """
                         ssh ${VM_USER}@${PROD_VM} '
-                            docker pull ${IMAGE_LATEST} && \
+                            docker pull ${NEXUS_REGISTRY}/${IMAGE_NAME}:latest && \
                             docker stop ${IMAGE_NAME} || true && \
                             docker rm ${IMAGE_NAME} || true && \
-                            docker run -d --name ${IMAGE_NAME} -p 5000:5000 ${IMAGE_LATEST}
+                            docker run -d --name ${IMAGE_NAME} -p 5000:5000 ${NEXUS_REGISTRY}/${IMAGE_NAME}:latest
                         '
                     """
                 }
