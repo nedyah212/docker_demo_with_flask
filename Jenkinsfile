@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         NEXUS_REGISTRY = 'localhost:8082'
-        NEXUS_CREDENTIAL_ID = 'nexus_credentials'
+        NEXUS_CREDENTIAL_ID = 'nexus-credentials'
         IMAGE_NAME = 'flask-demo'
     }
 
