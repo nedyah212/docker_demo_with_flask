@@ -6,6 +6,7 @@ pipeline {
         NEXUS_CREDENTIAL_ID = 'nexus-credentials'
         IMAGE_NAME = "${scm.getUserRemoteConfigs()[0].getUrl().tokenize('/').last().split('\\.')[0]}"
         STAGING_SERVER = '10.0.0.225'
+        PROD_SERVER = '10.0.0.226'
         CONTAINER_PORT = '5000'
     }
 
@@ -65,6 +66,36 @@ pipeline {
                         echo "Deploying to staging server..."
                         sh """
                             ssh -o StrictHostKeyChecking=no -i \$SSH_KEY \$SSH_USER@${STAGING_SERVER} \
+                                "echo '\$NEXUS_CREDS_PSW' | docker login ${NEXUS_REGISTRY_IP} -u '\$NEXUS_CREDS_USR' --password-stdin && \
+                                docker pull ${NEXUS_REGISTRY_IP}/${IMAGE_NAME}:${BUILD_NUMBER} && \
+                                docker stop ${IMAGE_NAME} || true && \
+                                docker rm ${IMAGE_NAME} || true && \
+                                docker run -d --name ${IMAGE_NAME} -p 80:${CONTAINER_PORT} ${NEXUS_REGISTRY_IP}/${IMAGE_NAME}:${BUILD_NUMBER}"
+                        """
+                        echo "Container deployed on staging"
+                    }
+                }
+            }
+        }
+
+        stage('Deploy to Production Server') {
+            steps {
+                withCredentials([
+                    sshUserPrivateKey(
+                        credentialsId: 'prod-ssh-key',
+                        keyFileVariable: 'SSH_KEY',
+                        usernameVariable: 'SSH_USER'
+                    ),
+                    usernamePassword(
+                        credentialsId: 'nexus-credentials',
+                        usernameVariable: 'NEXUS_CREDS_USR',
+                        passwordVariable: 'NEXUS_CREDS_PSW'
+                    )
+                ]) {
+                    script {
+                        echo "Deploying to production server..."
+                        sh """
+                            ssh -o StrictHostKeyChecking=no -i \$SSH_KEY \$SSH_USER@${PROD_SERVER} \
                                 "echo '\$NEXUS_CREDS_PSW' | docker login ${NEXUS_REGISTRY_IP} -u '\$NEXUS_CREDS_USR' --password-stdin && \
                                 docker pull ${NEXUS_REGISTRY_IP}/${IMAGE_NAME}:${BUILD_NUMBER} && \
                                 docker stop ${IMAGE_NAME} || true && \
