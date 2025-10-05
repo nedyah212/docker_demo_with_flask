@@ -3,8 +3,12 @@ import os
 from datetime import datetime
 
 # Custom formatter
-formatter_console = logging.Formatter('%(asctime)s [%(levelname)s] %(filename)s: %(message)s')
-formatter_file = logging.Formatter('%(asctime)s [%(levelname)s] %(filename)s:%(lineno)d: %(message)s')
+formatter_console = logging.Formatter(
+    "%(asctime)s [%(levelname)s] %(filename)s: %(message)s"
+)
+formatter_file = logging.Formatter(
+    "%(asctime)s [%(levelname)s] %(filename)s:%(lineno)d: %(message)s"
+)
 
 # Create console handler
 console_handler = logging.StreamHandler()
