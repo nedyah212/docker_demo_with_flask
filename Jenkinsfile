@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        NEXUS_REGISTRY = '10.0.0.224:8082'
+        NEXUS_REGISTRY = 'localhost:8082'
         NEXUS_CREDENTIAL_ID = 'nexus_credentials'
         IMAGE_NAME = 'flask-demo'
     }
@@ -58,10 +58,10 @@ pipeline {
                         echo "Deploying to staging server..."
                         sh """
                             ssh -o StrictHostKeyChecking=no -i \$SSH_KEY \$SSH_USER@10.0.0.225 '
-                                docker pull ${NEXUS_REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER}
-                                docker stop ${IMAGE_NAME} || true
-                                docker rm ${IMAGE_NAME} || true
-                                docker run -d --name ${IMAGE_NAME} -p 80:5000 ${NEXUS_REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER}
+                                docker pull 10.0.0.224:8082/flask-demo:${BUILD_NUMBER}
+                                docker stop flask-demo || true
+                                docker rm flask-demo || true
+                                docker run -d --name flask-demo -p 80:5000 10.0.0.224:8082/flask-demo:${BUILD_NUMBER}
                             '
                         """
                         echo "Container deployed on staging"
