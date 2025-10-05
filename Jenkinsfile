@@ -45,31 +45,30 @@ pipeline {
             }
         }
 
-        stage('Push to Staging Server') {
+        stage('Deploy to Staging Server') {
             steps {
                 withCredentials([
-                    string(
-                        credentialsId: 'staging-server-address',
-                        variable: 'STAGING_SERVER'
-                    ),
-                    usernamePassword(
-                        credentialsId: 'staging-credentials',
-                        usernameVariable: 'USERNAME',
-                        passwordVariable: 'PASSWORD'
+                    sshUserPrivateKey(
+                        credentialsId: 'staging-ssh-key',
+                        keyFileVariable: 'SSH_KEY',
+                        usernameVariable: 'SSH_USER'
                     )
                 ]) {
                     script {
-                        echo "Logging into staging server..."
-                        docker.withRegistry("https://${STAGING_SERVER}", 'staging-credentials') {
-                            def image = docker.image("${NEXUS_REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER}")
-                            image.push("${BUILD_NUMBER}")
-                        }
-                        echo "✓✓✓✓ Image pushed to staging server"
+                        echo "Deploying to staging server..."
+                        sh """
+                            ssh -o StrictHostKeyChecking=no -i \$SSH_KEY \$SSH_USER@10.0.0.225 '
+                                docker pull ${NEXUS_REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER}
+                                docker stop ${IMAGE_NAME} || true
+                                docker rm ${IMAGE_NAME} || true
+                                docker run -d --name ${IMAGE_NAME} -p 80:5000 ${NEXUS_REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER}
+                            '
+                        """
+                        echo "Container deployed on staging"
                     }
                 }
             }
         }
-
     }
 
     post {
