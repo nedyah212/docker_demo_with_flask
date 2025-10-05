@@ -45,38 +45,36 @@ pipeline {
             }
         }
 
-        stage('Deploy to Staging Server') {
-            steps {
-                withCredentials([
-                    sshUserPrivateKey(
-                        credentialsId: 'staging-ssh-key',
-                        keyFileVariable: 'SSH_KEY',
-                        usernameVariable: 'SSH_USER'
-                    ),
-                    usernamePassword(
-                        credentialsId: 'nexus-credentials',
-                        usernameVariable: 'NEXUS_CREDS_USR',
-                        passwordVariable: 'NEXUS_CREDS_PSW'
-                    )
-                ]) {
-                    script {
-                        echo "Deploying to staging server..."
-                        sh """
-                            ssh -o StrictHostKeyChecking=no -i \$SSH_KEY \$SSH_USER@10.0.0.225 '
-                                echo "\$NEXUS_CREDS_PSW" | docker login 10.0.0.224:8082 -u \$NEXUS_CREDS_USR --password-stdin
-                                docker pull 10.0.0.224:8082/flask-demo:${BUILD_NUMBER}
-                                docker stop flask-demo || true
-                                docker rm flask-demo || true
-                                docker run -d --name flask-demo -p 80:5000 10.0.0.224:8082/flask-demo:${BUILD_NUMBER}
-                            '
-                        """
-                        echo "Container deployed on staging"
-                    }
-                }
+stage('Deploy to Staging Server') {
+    steps {
+        withCredentials([
+            sshUserPrivateKey(
+                credentialsId: 'staging-ssh-key',
+                keyFileVariable: 'SSH_KEY',
+                usernameVariable: 'SSH_USER'
+            ),
+            usernamePassword(
+                credentialsId: 'nexus-credentials',
+                usernameVariable: 'NEXUS_CREDS_USR',
+                passwordVariable: 'NEXUS_CREDS_PSW'
+            )
+        ]) {
+            script {
+                echo "Deploying to staging server..."
+                sh """
+                    ssh -o StrictHostKeyChecking=no -i \$SSH_KEY \$SSH_USER@10.0.0.225 \
+                        "echo '\$NEXUS_CREDS_PSW' | docker login 10.0.0.224:8082 -u '\$NEXUS_CREDS_USR' --password-stdin && \
+                        docker pull 10.0.0.224:8082/flask-demo:${BUILD_NUMBER} && \
+                        docker stop flask-demo || true && \
+                        docker rm flask-demo || true && \
+                        docker run -d --name flask-demo -p 80:5000 10.0.0.224:8082/flask-demo:${BUILD_NUMBER}"
+                """
+                echo "Container deployed on staging"
             }
         }
     }
-
+}
+}
     post {
         success {
             echo "Pipeline completed successfully!"
