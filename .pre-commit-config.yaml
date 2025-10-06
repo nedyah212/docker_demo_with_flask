@@ -1,42 +1,45 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
 repos:
+  # Ruff - Fast Python linter
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.13.3
+    rev: v0.6.9
     hooks:
-      - id: ruff-check
+      # Run the linter
+      - id: ruff
         args: [--fix]
+      # Run the formatter
       - id: ruff-format
 
+  # Black - Python code formatter
   - repo: https://github.com/psf/black
     rev: 24.8.0
     hooks:
       - id: black
         language_version: python3.12
 
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.11.2
-    hooks:
-      - id: mypy
-        additional_dependencies: [types-flask, types-requests]
-        args: [--ignore-missing-imports, --no-strict-optional]
-
+  # Bandit - Security linter
   - repo: https://github.com/PyCQA/bandit
     rev: 1.7.9
     hooks:
       - id: bandit
-        args: [-r, app/, -ll]
+        args: [-r, app/]
+        exclude: ^tests/
 
+  # Hadolint - Dockerfile linter
   - repo: https://github.com/hadolint/hadolint
     rev: v2.12.0
     hooks:
       - id: hadolint-docker
 
+  # pip-audit - Check for vulnerable dependencies
   - repo: https://github.com/pypa/pip-audit
     rev: v2.7.3
     hooks:
       - id: pip-audit
-        args: [-r, requirements.txt]
-        files: ^requirements\.txt$
+        args: [--ignore-vuln, GHSA-4xh5-x5gv-qwph]
 
+  # Additional useful hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
     hooks:

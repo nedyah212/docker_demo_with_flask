@@ -8,6 +8,8 @@ pipeline {
         STAGING_SERVER = '10.0.0.225'
         PROD_SERVER = '10.0.0.226'
         CONTAINER_PORT = '5000'
+        STAGING_SERVER_PORT = '80'
+        PROD_SERVER_PORT = '8080'
     }
 
     stages {
@@ -17,6 +19,17 @@ pipeline {
                     echo "Building image: ${NEXUS_REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER}"
                     dockerImage = docker.build("${NEXUS_REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER}")
                     echo "✓ Image built successfully"
+                }
+            }
+        }
+
+        stage('Run Unit Tests') {
+            steps {
+                sh 'python -m pytest tests/ --verbose --junit-xml=test-results.xml'
+            }
+            post {
+                always {
+                    junit 'test-results.xml'
                 }
             }
         }
@@ -70,7 +83,7 @@ pipeline {
                                 docker pull ${NEXUS_REGISTRY_IP}/${IMAGE_NAME}:${BUILD_NUMBER} && \
                                 docker stop ${IMAGE_NAME} || true && \
                                 docker rm ${IMAGE_NAME} || true && \
-                                docker run -d --name ${IMAGE_NAME} -p 80:${CONTAINER_PORT} ${NEXUS_REGISTRY_IP}/${IMAGE_NAME}:${BUILD_NUMBER}"
+                                docker run -d --name ${IMAGE_NAME} -p ${STAGING_SERVER_PORT}:${CONTAINER_PORT} ${NEXUS_REGISTRY_IP}/${IMAGE_NAME}:${BUILD_NUMBER}"
                         """
                         echo "Container deployed on staging"
                     }
@@ -100,7 +113,7 @@ pipeline {
                                 docker pull ${NEXUS_REGISTRY_IP}/${IMAGE_NAME}:${BUILD_NUMBER} && \
                                 docker stop ${IMAGE_NAME} || true && \
                                 docker rm ${IMAGE_NAME} || true && \
-                                docker run -d --name ${IMAGE_NAME} -p 8080:${CONTAINER_PORT} ${NEXUS_REGISTRY_IP}/${IMAGE_NAME}:${BUILD_NUMBER}"
+                                docker run -d --name ${IMAGE_NAME} -p ${PROD_SERVER_PORT}:${CONTAINER_PORT} ${NEXUS_REGISTRY_IP}/${IMAGE_NAME}:${BUILD_NUMBER}"
                         """
                         echo "Container deployed on production"
                     }
