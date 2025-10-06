@@ -23,7 +23,7 @@ pipeline {
                 }
             }
 
-        stage('Test') {
+        stage('Run Unit Tests') {
             steps {
                 sh '''
                     python3 -m venv venv
@@ -97,6 +97,20 @@ pipeline {
             }
         }
 
+        stage('Verify Staging Deployment') {
+            steps {
+                sh '''
+                    # Wait for container to start
+                    sleep 10
+
+                    # Check if it's responding
+                    curl -f http://10.0.0.225 || exit 1
+
+                    echo "Staging deployment verified!"
+                '''
+            }
+        }
+
         stage('Deploy to Production Server') {
             steps {
                 withCredentials([
@@ -124,6 +138,15 @@ pipeline {
                         echo "Container deployed on production"
                     }
                 }
+            }
+        }
+        stage('Verify Production Deployment') {
+            steps {
+                sh '''
+                    sleep 10
+                    curl -f http://10.0.0.226:8080 || exit 1
+                    echo "Production deployment verified!"
+                '''
             }
         }
     }
