@@ -12,20 +12,32 @@ pipeline {
         PROD_SERVER_PORT = '8080'
     }
 
-    stages {
-        stage('Build Docker Image') {
-            steps {
-                script {
-                    echo "Building image: ${NEXUS_REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER}"
-                    dockerImage = docker.build("${NEXUS_REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER}")
-                    echo "✓ Image built successfully"
+        stages {
+            stage('Build Docker Image') {
+                steps {
+                    script {
+                        echo "Building image: ${NEXUS_REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER}"
+                        dockerImage = docker.build("${NEXUS_REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER}")
+                        echo "✓ Image built successfully"
+                    }
                 }
             }
-        }
 
-        stage('Run Unit Tests') {
+        stage('Test') {
             steps {
-                sh 'python -m pytest tests/ --verbose --junit-xml=test-results.xml'
+                sh '''
+                    # Install Python if not available
+                    apt-get update && apt-get install -y python3 python3-pip python3-venv
+
+                    # Create virtual environment and install dependencies
+                    python3 -m venv venv
+                    . venv/bin/activate
+                    pip install -r requirements.txt
+                    pip install -r requirements-dev.txt
+
+                    # Run tests
+                    python -m pytest tests/ --verbose --junit-xml=test-results.xml
+                '''
             }
             post {
                 always {
